@@ -10,11 +10,27 @@ html, body, #editor {
     margin: 0;
 }
 .toolbar {
-    padding: 1px 5px;
+    padding: 2px;
 }
-.toolbar > select, .toolbar > button {
+.right {
+    float: right;
+}
+select, button {
     padding: 3px 6px;
+    border: 1px solid #777;
+    min-height: 2em;
+    min-width: 2em;
 }
+.toolbar, select, button {
+    background: #f0f0f0;
+    color: #333;
+}
+.dark .toolbar, .dark select, .dark button {
+    background: #262424;
+    color: #E6E1DC;
+    -moz-appearance: none;
+}
+
 #editor {
     font-size: 14px;
     line-height: 20px;
@@ -39,6 +55,9 @@ html, body, #editor {
 </head>
 <body class="enterspaces">
 <div class="toolbar">
+    <div class="right">
+        <button id="light" onclick="toggleTheme()" title="Light" autocomplete="off">&#x25CF;</button>
+    </div>
     <a href="index.html"><img src="favicon.png" alt="Home" title="Home" /></a>
     <select id="folding" title="Format" onchange="onChangeFormatSelect(this)">
                     <option data-construct="new Enterspaces.FoldToWidth(0)">Unfold All</option>
@@ -67,6 +86,8 @@ html, body, #editor {
 var Enterspaces = window.Enterspaces;
 var folding;
 var editor;
+var LIGHT_THEME = 'ace/theme/textmate';
+var DARK_THEME = 'ace/theme/merbivore_soft';
 
 function onChangeFormatSelect(select) {
     folding = eval(select.options[select.selectedIndex].dataset.construct);
@@ -111,6 +132,14 @@ function handlePaste (e) {
     redraw();
 }
 
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+    if (editor) {
+        var theme = document.body.classList.contains('dark') ? DARK_THEME : LIGHT_THEME;
+        editor.setTheme(theme);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function(event) {
     document.getElementById("folding").onchange();
     document.getElementById('editor').addEventListener('paste', handlePaste);
@@ -121,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.0/ace.js" integrity="sha256-KnpXT25fqw7kpKElaD8u7A/Gg6jOr9G3x+1RuL+mo9E=" crossorigin="anonymous"></script>
 <script>
 editor = ace.edit("editor");
-editor.setTheme("ace/theme/textmate");
+editor.setTheme(LIGHT_THEME);
 editor.session.setMode("ace/mode/haskell");
 
 editor.session.addFold_orig = editor.session.addFold;

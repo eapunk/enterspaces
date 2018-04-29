@@ -55,6 +55,12 @@ body.dark {
 .dark button:disabled {
     color: #555;
 }
+#save-settings {
+    text-decoration: line-through;
+}
+#save-settings.enabled {
+    text-decoration: none;
+}
 
 #editor {
     font-size: 14px;
@@ -82,6 +88,8 @@ body.dark {
 <div id="toolbar" class="toolbar">
     <div class="right">
         <button id="light" onclick="toggleTheme()" title="Light" autocomplete="off">&#x25CF;</button>
+        <button id="save-settings" onclick="setStorePermissionDlg()" title="Saving settings to local storage"
+            autocomplete="off">&#x1F4BE;</button>
     </div>
     <a href="index.html"><img src="favicon.png" alt="Home" title="Home" /></a>
     <select id="folding" title="Format" onchange="onChangeFormatSelect(this)">
@@ -170,10 +178,15 @@ function handlePaste (e) {
     redraw();
 }
 
-function toggleTheme() {
+function toggleTheme(dark) {
+    var isDarkTheme = document.body.classList.contains('dark');
+    if (typeof dark != 'undefined' && dark == isDarkTheme) {
+        return;
+    }
     document.body.classList.toggle('dark');
+    isDarkTheme = !isDarkTheme;
     if (editor) {
-        var theme = document.body.classList.contains('dark') ? DARK_THEME : LIGHT_THEME;
+        var theme = isDarkTheme ? DARK_THEME : LIGHT_THEME;
         editor.setTheme(theme);
     }
 }
@@ -211,6 +224,73 @@ window.addEventListener("resize", function (event) {
     editor.resize();
 });
 window.dispatchEvent(new Event('resize'));
+</script>
+<script>
+function setStorePermissionDlg() {
+    if (!hasLocalStorage()) {
+        alert('Local storage is unavailable.');
+        return;
+    }
+    if (confirm('Store settings to local storage?\n\
+Stored settings are:\n\
+    - Format\n\
+    - Remove fields\n\
+    - Light or dark theme')) {
+        localStorage.setItem('store_settings', '1');
+        saveSettings();
+    }
+    else {
+        localStorage.clear();
+    }
+    updateStorageIcon();
+}
+function hasLocalStorage() {
+    try {
+        return !!localStorage && !!localStorage.getItem;
+    }
+    catch(e) {
+        return false;
+    }
+}
+function canStoreSettings() {
+    return hasLocalStorage() && localStorage.getItem('store_settings');
+}
+function updateStorageIcon() {
+    var enabled = canStoreSettings();
+    document.getElementById('save-settings').classList.toggle('enabled', !!enabled);
+}
+function saveSettings() {
+    var foldingIndex = document.getElementById('folding').selectedIndex;
+    localStorage.setItem('folding_index', foldingIndex);
+
+    var removeString = document.getElementById('remove-fields').value;
+    localStorage.setItem('remove_fields', removeString);
+
+    var isDarkTheme = document.body.classList.contains('dark');
+    localStorage.setItem('dark_theme', isDarkTheme ? '1' : '');
+}
+function restoreSettings() {
+    var foldingIndex = localStorage.getItem('folding_index');
+    if (foldingIndex) {
+        document.getElementById('folding').selectedIndex = foldingIndex;
+    }
+
+    var removeString = localStorage.getItem('remove_fields') || '';
+    document.getElementById('remove-fields').value = removeString;
+
+    var isDarkTheme = localStorage.getItem('dark_theme') || '';
+    toggleTheme(!!isDarkTheme);
+}
+
+updateStorageIcon();
+if (canStoreSettings()) {
+    restoreSettings();
+}
+window.addEventListener("beforeunload", function (event) {
+    if (canStoreSettings()) {
+        saveSettings();
+    }
+});
 </script>
 </body>
 </html>

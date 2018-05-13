@@ -162,16 +162,19 @@ function _redraw() {
     var text = editor ? editor.getValue() : document.getElementById('editor').innerHTML;
     var options = getOptions();
 
-    var newText = Enterspaces.prettify(options)(text || "");
+    try {
+        var newText = Enterspaces.prettify(options)(text || "");
 
-    if (editor) {
-        editor.setValue(newText, -1);
+        if (editor) {
+            editor.setValue(newText, -1);
+        }
+        else {
+            document.getElementById('editor').innerHTML = newText;
+        }
     }
-    else {
-        document.getElementById('editor').innerHTML = newText;
+    finally {
+        document.getElementById("refresh").disabled = false;
     }
-
-    document.getElementById("refresh").disabled = false;
 }
 
 function handlePaste (e) {
